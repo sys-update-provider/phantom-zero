@@ -1,0 +1,11 @@
+
+Configuration IP de Windows
+
+
+Carte Ethernet Ethernet0 :
+
+   Suffixe DNS propre … la connexion. . . : 
+   Adresse IPv6 de liaison locale. . . . .: fe80::87e9:b4d8:7e06:bd65%9
+   Adresse IPv4. . . . . . . . . . . . . .: 172.20.10.3
+   Masque de sous-r‚seau. . . .ÿ. . . . . : 255.255.255.240
+   Passerelle par d‚faut. . . .ÿ. . . . . : 172.20.10.1
