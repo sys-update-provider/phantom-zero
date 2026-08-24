@@ -1,0 +1,1 @@
+{"logs":[{"timestamp":"2026-08-24 15:21:00","event":"agent_ready","command":"","output":"","target":"","success":false,"details":"Agent fully initialized and ready"},{"timestamp":"2026-08-24 15:22:23","event":"agent_start","command":"","output":"","target":"","success":false,"details":"Phantom-X agent started"}]}
